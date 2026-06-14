@@ -37,7 +37,7 @@
 ### Slide 3 — Current SDLC Process
 **พูดอะไร:**
 - อธิบาย flow: Plan → Code → Build → Test → Deploy → Monitor
-- "这是我们使用的过程 ครอบคลุมทุก phase"
+- "This is our current process — ครอบคลุมทุก phase"
 - เน้นว่า **Deploy phase** คือจุดที่มีปัญหามากที่สุด (manual)
 
 **Tip:** ชี้ที่ flow diagram แล้วไล่ทีละ step
@@ -240,7 +240,7 @@
 **A:** "Terraform มี tier ฟรี (Open Source) + tier เสียเงิน (Cloud) อยู่ระหว่างประเมิน licensing. AI tools ต้อง evaluate pricing ตาม use case"
 
 ### Q: "Timeline จริงจังแค่ไหน? Q3 ทันไหม?"
-**A:** "Phase 2 (Terraform) ขึ้นอยู่กับการอนุมัติ procurement ถ้าได้เร็วก็เริ่มได้เร็ว. Phase 3-4 เป็น plan คร่าวๆ ปรับได้ตาม实际情况"
+**A:** "Phase 2 (Terraform) ขึ้นอยู่กับการอนุมัติ procurement ถ้าได้เร็วก็เริ่มได้เร็ว. Phase 3-4 เป็น plan คร่าวๆ ปรับได้ตามสถานการณ์จริง"
 
 ### Q: "ทีมต้อง training อะไรบ้าง?"
 **A:** "Phase 2: Terraform training (HCL syntax, workflow). Phase 3: AI tool training (prompt engineering, integration). ประมาณ 2-3 วันต่อคน"
@@ -256,7 +256,7 @@
 2. **ชี้ slide เปรียบเทียบ** — Slide 6 vs 10, Slide 11 คือ key slides ที่ต้องเน้น
 3. **ถามผู้ฟัง** — สร้าง engagement ด้วยคำถาม เช่น "มีใครเจอปัญหาแบบนี้บ้าง?"
 4. **ตอบสั้นๆ** — Q&A ตอบกระชับ ไม่ต้องอธิบายยาว
-5. **เน้น ROI** — ผู้บริหาร关心 ตัวเลข → เน้น Slide 12
+5. **เน้น ROI** — ผู้บริหารให้ความสำคัญกับตัวเลข → เน้น Slide 12
 
 ---
 
