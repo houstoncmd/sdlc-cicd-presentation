@@ -1,0 +1,1999 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modernizing SDLC with CI/CD Pipeline on AWS Cloud</title>
+<style>
+  /* ===== RESET & VARIABLES ===== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+    --bg-tertiary: #1c2128;
+    --border: #30363d;
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --accent-teal: #01A982;
+    --accent-teal-dim: #01a98233;
+    --accent-orange: #FF9900;
+    --accent-orange-dim: #ff990033;
+    --accent-blue: #58a6ff;
+    --success: #3fb950;
+    --danger: #f85149;
+    --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --radius: 10px;
+    --slide-w: 1920px;
+    --slide-h: 1080px;
+  }
+
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--font);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== WEBSITE MODE ===== */
+  .site-nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(13,17,23,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px;
+  }
+  .site-nav .logo {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 1.1rem; font-weight: 700; letter-spacing: 0.5px;
+  }
+  .site-nav .logo .icon { font-size: 1.4rem; }
+  .site-nav .logo .teal { color: var(--accent-teal); }
+  .site-nav .logo .orange { color: var(--accent-orange); }
+  .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+  .nav-links a {
+    color: var(--text-secondary); text-decoration: none; font-size: 0.9rem;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--text-primary); }
+  .btn-presentation {
+    background: linear-gradient(135deg, var(--accent-teal), #00c9a7);
+    color: #000; border: none; padding: 8px 20px; border-radius: 6px;
+    font-weight: 600; font-size: 0.85rem; cursor: pointer;
+    transition: all 0.3s; display: flex; align-items: center; gap: 6px;
+  }
+  .btn-presentation:hover {
+    transform: translateY(-1px); box-shadow: 0 4px 20px rgba(1,169,130,0.4);
+  }
+
+  /* Hero */
+  .hero {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center;
+    padding: 6rem 2rem 4rem;
+    background:
+      radial-gradient(ellipse at 20% 50%, rgba(1,169,130,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 50%, rgba(255,153,0,0.06) 0%, transparent 50%),
+      var(--bg-primary);
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 16px; border-radius: 20px;
+    border: 1px solid var(--border); background: var(--bg-secondary);
+    font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 2rem;
+  }
+  .hero-badge .dot {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--accent-teal);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .hero h1 {
+    font-size: clamp(2.2rem, 5vw, 3.8rem);
+    font-weight: 800; line-height: 1.15;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-teal) 50%, var(--accent-orange) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero p {
+    font-size: 1.2rem; color: var(--text-secondary);
+    max-width: 700px; margin-bottom: 2.5rem;
+  }
+  .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+  .btn-hero {
+    padding: 14px 32px; border-radius: 8px; font-size: 1rem;
+    font-weight: 600; cursor: pointer; border: none;
+    transition: all 0.3s; display: flex; align-items: center; gap: 8px;
+  }
+  .btn-hero.primary {
+    background: linear-gradient(135deg, var(--accent-teal), #00c9a7);
+    color: #000;
+  }
+  .btn-hero.primary:hover {
+    transform: translateY(-2px); box-shadow: 0 8px 30px rgba(1,169,130,0.35);
+  }
+  .btn-hero.secondary {
+    background: var(--bg-secondary); color: var(--text-primary);
+    border: 1px solid var(--border);
+  }
+  .btn-hero.secondary:hover {
+    background: var(--bg-tertiary); border-color: var(--accent-teal);
+  }
+
+  /* Content Sections */
+  .content-wrapper {
+    max-width: 1100px; margin: 0 auto; padding: 4rem 2rem;
+  }
+  .section {
+    margin-bottom: 5rem; scroll-margin-top: 80px;
+  }
+  .section-label {
+    font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 2px; color: var(--accent-teal); margin-bottom: 0.75rem;
+  }
+  .section h2 {
+    font-size: 2rem; font-weight: 700; margin-bottom: 1rem;
+  }
+  .section h3 {
+    font-size: 1.3rem; font-weight: 600; margin-bottom: 0.75rem;
+    color: var(--text-primary);
+  }
+  .section p { color: var(--text-secondary); margin-bottom: 1rem; max-width: 800px; }
+
+  /* Cards Grid */
+  .cards-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem; margin-top: 2rem;
+  }
+  .card {
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.5rem;
+    transition: all 0.3s;
+  }
+  .card:hover {
+    border-color: var(--accent-teal);
+    box-shadow: 0 4px 20px rgba(1,169,130,0.1);
+    transform: translateY(-2px);
+  }
+  .card .card-icon {
+    width: 48px; height: 48px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; margin-bottom: 1rem;
+  }
+  .card h3 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+  .card p { font-size: 0.9rem; color: var(--text-secondary); margin: 0; }
+
+  .icon-teal { background: var(--accent-teal-dim); color: var(--accent-teal); }
+  .icon-orange { background: var(--accent-orange-dim); color: var(--accent-orange); }
+  .icon-blue { background: rgba(88,166,255,0.15); color: var(--accent-blue); }
+  .icon-green { background: rgba(63,185,80,0.15); color: var(--success); }
+
+  /* Flow Diagram */
+  .flow-diagram {
+    display: flex; align-items: center; justify-content: center;
+    gap: 0; margin: 2rem 0; flex-wrap: wrap;
+  }
+  .flow-step {
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1rem 1.5rem;
+    text-align: center; min-width: 120px;
+    transition: all 0.3s;
+  }
+  .flow-step:hover { border-color: var(--accent-teal); }
+  .flow-step .step-name { font-weight: 600; font-size: 0.95rem; }
+  .flow-step .step-desc { font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px; }
+  .flow-arrow {
+    color: var(--accent-teal); font-size: 1.5rem; padding: 0 0.5rem;
+    font-weight: 700;
+  }
+
+  /* Comparison Table */
+  .comparison-table {
+    width: 100%; border-collapse: collapse; margin-top: 2rem;
+    font-size: 0.95rem;
+  }
+  .comparison-table th, .comparison-table td {
+    padding: 1rem 1.2rem; border-bottom: 1px solid var(--border);
+    text-align: left;
+  }
+  .comparison-table th {
+    background: var(--bg-secondary); font-weight: 600;
+    color: var(--text-primary); position: sticky; top: 64px;
+  }
+  .comparison-table th:nth-child(2) { color: var(--text-secondary); }
+  .comparison-table th:nth-child(3) { color: var(--accent-teal); }
+  .comparison-table td:nth-child(2) { color: var(--text-secondary); }
+  .comparison-table td:nth-child(3) { color: var(--success); font-weight: 500; }
+  .comparison-table tr:hover td { background: var(--bg-tertiary); }
+  .badge {
+    display: inline-block; padding: 2px 10px; border-radius: 12px;
+    font-size: 0.75rem; font-weight: 600;
+  }
+  .badge-pending { background: rgba(255,153,0,0.15); color: var(--accent-orange); }
+  .badge-active { background: rgba(1,169,130,0.15); color: var(--accent-teal); }
+
+  /* Stats */
+  .stats-row {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem; margin: 2rem 0;
+  }
+  .stat-card {
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.5rem; text-align: center;
+  }
+  .stat-number {
+    font-size: 2.5rem; font-weight: 800;
+    background: linear-gradient(135deg, var(--accent-teal), var(--accent-orange));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .stat-label { font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem; }
+
+  /* Roadmap */
+  .roadmap { display: flex; gap: 0; margin-top: 2rem; position: relative; }
+  .roadmap::before {
+    content: ''; position: absolute; top: 28px; left: 0; right: 0;
+    height: 3px; background: var(--border);
+  }
+  .roadmap-item {
+    flex: 1; text-align: center; position: relative; padding-top: 50px;
+  }
+  .roadmap-dot {
+    position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 3px solid var(--accent-teal); background: var(--bg-primary);
+    z-index: 1;
+  }
+  .roadmap-item.active .roadmap-dot { background: var(--accent-teal); }
+  .roadmap-item.pending .roadmap-dot { border-color: var(--accent-orange); }
+  .roadmap-item .phase { font-weight: 600; font-size: 0.8rem; color: var(--accent-teal); text-transform: uppercase; letter-spacing: 1px; }
+  .roadmap-item .phase-title { font-weight: 600; margin-top: 0.5rem; font-size: 0.95rem; }
+  .roadmap-item .phase-desc { font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.3rem; }
+  .roadmap-item .phase-time { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem; }
+
+  /* Footer */
+  .site-footer {
+    border-top: 1px solid var(--border); padding: 3rem 2rem;
+    text-align: center; color: var(--text-secondary); font-size: 0.85rem;
+  }
+
+  /* ===== PRESENTATION MODE ===== */
+  .presentation-overlay {
+    display: none; position: fixed; inset: 0; z-index: 9999;
+    background: var(--bg-primary);
+    flex-direction: column;
+  }
+  .presentation-overlay.active { display: flex; }
+
+  .pres-slide-container {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    overflow: hidden; position: relative;
+  }
+  .pres-slide {
+    width: var(--slide-w); height: var(--slide-h);
+    position: absolute;
+    opacity: 0; transform: scale(0.95);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    pointer-events: none;
+    display: flex; flex-direction: column;
+    padding: 80px 100px;
+    overflow: hidden;
+  }
+  .pres-slide.active {
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 2;
+  }
+
+  /* Scale slides to fit viewport */
+  @media (max-width: 1400px) {
+    .pres-slide {
+      transform-origin: center center;
+    }
+    .pres-slide.active {
+      transform: scale(calc(100vw / 1920));
+    }
+  }
+
+  .pres-controls {
+    height: 64px; background: rgba(13,17,23,0.95);
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center; gap: 1rem;
+    padding: 0 2rem; z-index: 10;
+  }
+  .pres-btn {
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    color: var(--text-primary); padding: 8px 20px; border-radius: 6px;
+    font-size: 0.9rem; font-weight: 500; cursor: pointer;
+    transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+  }
+  .pres-btn:hover { border-color: var(--accent-teal); background: var(--bg-tertiary); }
+  .pres-btn.exit { border-color: var(--danger); color: var(--danger); }
+  .pres-btn.exit:hover { background: rgba(248,81,73,0.1); }
+  .pres-counter {
+    font-size: 0.9rem; color: var(--text-secondary); min-width: 80px; text-align: center;
+  }
+  .pres-progress {
+    position: absolute; top: 0; left: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent-teal), var(--accent-orange));
+    transition: width 0.4s ease;
+  }
+
+  /* Slide Themes */
+  .slide-title-bg {
+    background:
+      radial-gradient(ellipse at 30% 40%, rgba(1,169,130,0.12) 0%, transparent 50%),
+      radial-gradient(ellipse at 70% 60%, rgba(255,153,0,0.08) 0%, transparent 50%),
+      var(--bg-primary);
+    justify-content: center; align-items: center; text-align: center;
+    padding: 100px;
+  }
+  .slide-dark { background: var(--bg-primary); }
+  .slide-gradient {
+    background:
+      radial-gradient(ellipse at 0% 0%, rgba(1,169,130,0.1) 0%, transparent 40%),
+      var(--bg-primary);
+  }
+
+  /* Slide Typography */
+  .s-title {
+    font-size: 56px; font-weight: 800; line-height: 1.2; margin-bottom: 20px;
+  }
+  .s-subtitle {
+    font-size: 24px; color: var(--text-secondary); font-weight: 400;
+  }
+  .s-label {
+    font-size: 14px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 3px; color: var(--accent-teal); margin-bottom: 16px;
+  }
+  .s-heading {
+    font-size: 42px; font-weight: 700; margin-bottom: 30px; line-height: 1.2;
+  }
+  .s-body { font-size: 22px; color: var(--text-secondary); line-height: 1.7; }
+
+  /* Slide Cards */
+  .s-cards { display: grid; gap: 20px; margin-top: 20px; }
+  .s-cards-2 { grid-template-columns: 1fr 1fr; }
+  .s-cards-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .s-cards-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .s-card {
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    border-radius: 12px; padding: 28px;
+    transition: all 0.3s;
+  }
+  .s-card h4 { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+  .s-card p { font-size: 16px; color: var(--text-secondary); line-height: 1.6; }
+  .s-card-icon {
+    width: 44px; height: 44px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; margin-bottom: 12px;
+  }
+
+  /* Slide Flow Diagram */
+  .s-flow {
+    display: flex; align-items: center; justify-content: center;
+    gap: 0; margin: 30px 0; flex-wrap: wrap;
+  }
+  .s-flow-step {
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 24px; text-align: center;
+    min-width: 140px; position: relative;
+  }
+  .s-flow-step .step-icon { font-size: 28px; margin-bottom: 6px; }
+  .s-flow-step .step-name { font-size: 16px; font-weight: 600; }
+  .s-flow-step .step-detail { font-size: 12px; color: var(--text-secondary); }
+  .s-flow-arrow {
+    color: var(--accent-teal); font-size: 28px; padding: 0 8px;
+    font-weight: 700; flex-shrink: 0;
+  }
+  .s-flow-step.highlight { border-color: var(--accent-teal); background: rgba(1,169,130,0.08); }
+  .s-flow-step.new { border-color: var(--accent-orange); background: rgba(255,153,0,0.08); }
+
+  /* Slide Comparison */
+  .s-compare {
+    display: grid; grid-template-columns: 1fr 60px 1fr;
+    gap: 20px; margin-top: 20px; align-items: start;
+  }
+  .s-compare-col { }
+  .s-compare-divider {
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; color: var(--text-secondary); padding-top: 40px;
+  }
+  .s-compare-col h3 {
+    font-size: 22px; font-weight: 700; margin-bottom: 16px;
+    padding-bottom: 12px; border-bottom: 2px solid var(--border);
+  }
+  .s-compare-col.old h3 { color: var(--text-secondary); border-color: var(--text-secondary); }
+  .s-compare-col.new h3 { color: var(--accent-teal); border-color: var(--accent-teal); }
+  .s-compare-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 12px 0; border-bottom: 1px solid var(--border);
+    font-size: 16px;
+  }
+  .s-compare-item:last-child { border-bottom: none; }
+  .s-compare-item .ci { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+
+  /* Slide Table */
+  .s-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+  .s-table th, .s-table td {
+    padding: 16px 20px; text-align: left; font-size: 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .s-table th {
+    font-weight: 600; color: var(--text-primary);
+    background: var(--bg-secondary); font-size: 16px;
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+  .s-table td { color: var(--text-secondary); }
+  .s-table .improved { color: var(--success); font-weight: 600; }
+  .s-table .current { color: var(--text-secondary); }
+
+  /* Slide Stats */
+  .s-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 30px; }
+  .s-stat {
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    border-radius: 12px; padding: 28px; text-align: center;
+  }
+  .s-stat .num {
+    font-size: 48px; font-weight: 800;
+    background: linear-gradient(135deg, var(--accent-teal), var(--accent-orange));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .s-stat .label { font-size: 16px; color: var(--text-secondary); margin-top: 8px; }
+  .s-stat .delta { font-size: 14px; color: var(--success); margin-top: 4px; font-weight: 600; }
+
+  /* Slide Roadmap */
+  .s-roadmap { display: flex; gap: 0; margin-top: 40px; position: relative; }
+  .s-roadmap::before {
+    content: ''; position: absolute; top: 32px; left: 5%; right: 5%;
+    height: 3px; background: var(--border);
+  }
+  .s-roadmap-item {
+    flex: 1; text-align: center; position: relative; padding-top: 60px;
+  }
+  .s-rm-dot {
+    position: absolute; top: 22px; left: 50%; transform: translateX(-50%);
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 3px solid var(--accent-teal); background: var(--bg-primary);
+    z-index: 1;
+  }
+  .s-roadmap-item.done .s-rm-dot { background: var(--accent-teal); }
+  .s-roadmap-item.pending .s-rm-dot { border-color: var(--accent-orange); }
+  .s-rm-phase { font-size: 13px; font-weight: 600; color: var(--accent-teal); text-transform: uppercase; letter-spacing: 2px; }
+  .s-rm-title { font-size: 18px; font-weight: 600; margin-top: 8px; }
+  .s-rm-desc { font-size: 14px; color: var(--text-secondary); margin-top: 6px; }
+  .s-rm-time { font-size: 13px; color: var(--text-secondary); margin-top: 8px; font-weight: 500; }
+
+  /* Slide Lists */
+  .s-list { list-style: none; margin-top: 16px; }
+  .s-list li {
+    display: flex; align-items: flex-start; gap: 14px;
+    padding: 12px 0; font-size: 20px; color: var(--text-secondary);
+    border-bottom: 1px solid rgba(48,54,61,0.5);
+  }
+  .s-list li:last-child { border-bottom: none; }
+  .s-list .li-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+
+  /* Slide accent line (subtle) */
+  .s-accent-bar {
+    width: 60px; height: 4px; border-radius: 2px;
+    background: linear-gradient(90deg, var(--accent-teal), var(--accent-orange));
+    margin-bottom: 20px;
+  }
+
+  /* Center layout */
+  .slide-center { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  .slide-left { display: flex; flex-direction: column; justify-content: center; }
+
+  /* Ending slide */
+  .slide-end {
+    background:
+      radial-gradient(ellipse at 50% 50%, rgba(1,169,130,0.15) 0%, transparent 50%),
+      var(--bg-primary);
+    justify-content: center; align-items: center; text-align: center;
+  }
+
+  /* Tool badge in flow */
+  .tool-badge {
+    display: inline-block; padding: 3px 10px; border-radius: 6px;
+    font-size: 11px; font-weight: 600; margin-top: 4px;
+  }
+  .tb-gitlab { background: rgba(252,101,42,0.15); color: #fc632a; }
+  .tb-jenkins { background: rgba(210,59,42,0.15); color: #d33b2a; }
+  .tb-harbor { background: rgba(66,133,244,0.15); color: #4285f4; }
+  .tb-terraform { background: rgba(128,61,229,0.15); color: #803de5; }
+  .tb-blackduck { background: rgba(255,255,255,0.1); color: #ccc; }
+  .tb-coverity { background: rgba(0,169,130,0.15); color: var(--accent-teal); }
+  .tb-ai { background: rgba(255,153,0,0.15); color: var(--accent-orange); }
+
+  /* Pain point cards */
+  .pain-card {
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    border-left: 3px solid var(--danger);
+    border-radius: 8px; padding: 16px 20px;
+  }
+  .pain-card h4 { font-size: 16px; font-weight: 600; margin-bottom: 4px; color: var(--text-primary); }
+  .pain-card p { font-size: 14px; color: var(--text-secondary); margin: 0; }
+
+  /* Subtitle on title slide */
+  .s-organization {
+    font-size: 16px; color: var(--text-secondary); margin-top: 30px;
+    padding-top: 20px; border-top: 1px solid var(--border);
+    display: inline-block;
+  }
+
+  /* Two column layout */
+  .s-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 20px; }
+
+  /* Benefit item */
+  .s-benefit {
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px 24px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .s-benefit .b-icon { font-size: 28px; flex-shrink: 0; }
+  .s-benefit .b-content h4 { font-size: 18px; font-weight: 600; }
+  .s-benefit .b-content p { font-size: 14px; color: var(--text-secondary); margin: 2px 0 0; }
+
+  /* Tag */
+  .s-tag {
+    display: inline-block; padding: 4px 14px; border-radius: 20px;
+    font-size: 13px; font-weight: 600;
+  }
+  .s-tag-teal { background: var(--accent-teal-dim); color: var(--accent-teal); }
+  .s-tag-orange { background: var(--accent-orange-dim); color: var(--accent-orange); }
+
+  /* Responsive scaling handled by JS scaleSlides() */
+
+  /* ===== EDIT MODE ===== */
+  .edit-active .pres-slide [data-editable]:hover {
+    outline: 2px dashed var(--accent-teal);
+    outline-offset: 2px;
+    cursor: text;
+    border-radius: 4px;
+  }
+  .edit-active .pres-slide [data-editable]:focus {
+    outline: 2px solid var(--accent-orange);
+    outline-offset: 2px;
+    background: rgba(255,153,0,0.05);
+    border-radius: 4px;
+  }
+  .edit-toolbar {
+    position: fixed; top: 0; left: 0; right: 0;
+    background: linear-gradient(90deg, rgba(255,153,0,0.15), rgba(1,169,130,0.1));
+    border-bottom: 2px solid var(--accent-orange);
+    padding: 10px 24px;
+    display: none;
+    align-items: center;
+    gap: 12px;
+    z-index: 10001;
+    font-size: 13px;
+    backdrop-filter: blur(8px);
+  }
+  .edit-active .edit-toolbar { display: flex; }
+  .edit-badge {
+    background: var(--accent-orange);
+    color: #000;
+    padding: 4px 14px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .edit-toolbar .spacer { flex: 1; }
+  .edit-btn {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .edit-btn:hover { border-color: var(--accent-teal); background: var(--bg-tertiary); }
+  .edit-btn.primary { background: var(--accent-teal); color: #000; border-color: var(--accent-teal); }
+  .edit-btn.primary:hover { background: #00c9a7; }
+  .edit-btn.danger { border-color: var(--danger); color: var(--danger); }
+  .edit-btn.danger:hover { background: rgba(248,81,73,0.1); }
+  .edit-btn.export { background: var(--accent-orange); color: #000; border-color: var(--accent-orange); }
+  .slide-manage-bar {
+    position: absolute; top: 8px; right: 8px;
+    display: none; gap: 4px; z-index: 100;
+    flex-wrap: wrap; justify-content: flex-end;
+  }
+  .edit-active .slide-manage-bar { display: flex; }
+  .slide-mgmt-btn {
+    background: rgba(0,0,0,0.8); color: #fff;
+    border: 1px solid var(--border);
+    padding: 4px 10px; border-radius: 4px;
+    font-size: 11px; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .slide-mgmt-btn:hover { border-color: var(--accent-teal); }
+  .slide-mgmt-btn.del { border-color: var(--danger); color: var(--danger); }
+  .slide-mgmt-btn.del:hover { background: rgba(248,81,73,0.2); }
+  /* Add Slide Modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85); z-index: 20000;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal-box {
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    border-radius: 14px; padding: 32px; max-width: 700px; width: 92%;
+    max-height: 80vh; overflow-y: auto;
+  }
+  .modal-box h2 { font-size: 22px; margin-bottom: 20px; }
+  .modal-close {
+    float: right; background: none; border: none;
+    color: var(--text-secondary); font-size: 24px; cursor: pointer;
+  }
+  .modal-close:hover { color: var(--text-primary); }
+  .template-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px;
+  }
+  .template-card {
+    background: var(--bg-tertiary); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .template-card:hover { border-color: var(--accent-teal); transform: translateY(-2px); }
+  .template-card h4 { font-size: 15px; margin-bottom: 4px; }
+  .template-card p { font-size: 12px; color: var(--text-secondary); }
+  .template-card .tc-icon { font-size: 24px; margin-bottom: 8px; }
+  .template-form { display: none; margin-top: 20px; }
+  .template-form.active { display: block; }
+  .form-group { margin-bottom: 14px; }
+  .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; color: var(--text-secondary); }
+  .form-group input, .form-group textarea {
+    width: 100%; background: var(--bg-tertiary); border: 1px solid var(--border);
+    color: var(--text-primary); padding: 10px 14px; border-radius: 8px;
+    font-size: 14px; font-family: var(--font);
+  }
+  .form-group textarea { min-height: 80px; resize: vertical; }
+  .form-group input:focus, .form-group textarea:focus {
+    outline: none; border-color: var(--accent-teal);
+  }
+  /* Toast */
+  .toast-msg {
+    position: fixed; bottom: 80px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--accent-teal); color: #000;
+    padding: 12px 28px; border-radius: 10px;
+    font-weight: 700; font-size: 14px; z-index: 30000;
+    opacity: 0; transition: all 0.3s;
+    pointer-events: none;
+  }
+  .toast-msg.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  /* Print-friendly */
+  @media print {
+    .site-nav { display: none; }
+    .presentation-overlay { display: none !important; }
+    body { background: white; color: #1a1a1a; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== WEBSITE NAVIGATION ===== -->
+<nav class="site-nav">
+  <div class="logo">
+    <span class="icon">⚙️</span>
+    <span><span class="teal">DevOps</span><span class="orange">Pipeline</span></span>
+  </div>
+  <div class="nav-links">
+    <a href="#sdlc">SDLC</a>
+    <a href="#tools">Tools</a>
+    <a href="#pipeline">Pipeline</a>
+    <a href="#compare">Compare</a>
+    <a href="#benefits">Benefits</a>
+    <button class="btn-presentation" onclick="enterPresentation()">
+      ▶ Presentation Mode
+    </button>
+    <button class="btn-presentation" id="editModeBtn" onclick="toggleEditMode()" style="background: linear-gradient(135deg, #FF9900, #e68a00);">
+      ✏️ Edit Mode
+    </button>
+  </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="hero-badge">
+    <span class="dot"></span>
+    DevOps Engineering Team
+  </div>
+  <h1>Modernizing SDLC with<br>CI/CD Pipeline on AWS Cloud</h1>
+  <p>ยกระดับกระบวนการพัฒนาซอฟต์แวร์ด้วย Infrastructure as Code, Automated Security Scanning และ AI-Powered Automation</p>
+  <div class="hero-actions">
+    <button class="btn-hero primary" onclick="enterPresentation()">
+      ▶ เริ่ม Presentation
+    </button>
+    <a href="#sdlc" class="btn-hero secondary">
+      📄 อ่านเนื้อหา
+    </a>
+  </div>
+</section>
+
+<!-- ===== CONTENT SECTIONS ===== -->
+<div class="content-wrapper">
+
+  <!-- SDLC Overview -->
+  <section id="sdlc" class="section">
+    <div class="section-label">01 — Overview</div>
+    <h2>Current SDLC Process</h2>
+    <p>Software Development Life Cycle ที่ใช้งานอยู่ในปัจจุบัน ครอบคลุมทุกขั้นตอนจากการวางแผนจนถึงการดูแลระบบ</p>
+    <div class="flow-diagram">
+      <div class="flow-step"><div class="step-name">📋 Plan</div><div class="step-desc">Requirements</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="step-name">💻 Code</div><div class="step-desc">Development</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="step-name">🔨 Build</div><div class="step-desc">Compile & Package</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="step-name">🧪 Test</div><div class="step-desc">QA & Security</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="step-name">🚀 Deploy</div><div class="step-desc">AWS Cloud</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="step-name">📊 Monitor</div><div class="step-desc">Observability</div></div>
+    </div>
+  </section>
+
+  <!-- Tools -->
+  <section id="tools" class="section">
+    <div class="section-label">02 — Tool Chain</div>
+    <h2>Current CI/CD Tool Chain</h2>
+    <p>เครื่องมือที่ใช้งานอยู่ในปัจจุบัน สำหรับ Source Control, Build, Container Registry และ Security Scanning</p>
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-icon icon-orange">🦊</div>
+        <h3>GitLab</h3>
+        <p>Source Code Management & CI Trigger — จัดการ repository, merge request, และ pipeline trigger</p>
+      </div>
+      <div class="card">
+        <div class="card-icon icon-orange">🔧</div>
+        <h3>Jenkins</h3>
+        <p>Build Server & Deployment Automation — build artifact, run test, deploy ขึ้น AWS</p>
+      </div>
+      <div class="card">
+        <div class="card-icon icon-blue">📦</div>
+        <h3>Harbor</h3>
+        <p>Container Image Registry — เก็บ Docker image, scan vulnerability, manage artifact</p>
+      </div>
+      <div class="card">
+        <div class="card-icon icon-blue">🛡️</div>
+        <h3>BlackDuck</h3>
+        <p>Open Source Security — scan _COMPONENT ที่ใช้จาก open source หา vulnerability</p>
+      </div>
+      <div class="card">
+        <div class="card-icon icon-teal">🔍</div>
+        <h3>Coverity</h3>
+        <p>Static Analysis (SAST) — วิเคราะห์ source code หา security flaw และ code quality</p>
+      </div>
+      <div class="card">
+        <div class="card-icon icon-green">🏗️</div>
+        <h3>Terraform <span class="badge badge-pending">Pending Approval</span></h3>
+        <p>Infrastructure as Code — จัดการ cloud infrastructure ด้วย code อยู่ระหว่างขออนุมัตินำเข้า</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pipeline -->
+  <section id="pipeline" class="section">
+    <div class="section-label">03 — Current Pipeline</div>
+    <h2>Current CI/CD Pipeline Flow</h2>
+    <p>ขั้นตอนการทำงานของ pipeline ในปัจจุบัน — จาก developer commit จนถึง deployment</p>
+    <div class="flow-diagram">
+      <div class="flow-step highlight"><div class="step-name">👨‍💻 Developer</div><div class="step-desc">Git Push</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="step-name">🦊 GitLab</div><div class="step-desc">CI Trigger</div><span class="tool-badge tb-gitlab">SCM</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="step-name">🔧 Jenkins</div><div class="step-desc">Build & Test</div><span class="tool-badge tb-jenkins">Build</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="step-name">🛡️ BlackDuck</div><div class="step-desc">OSS Scan</div><span class="tool-badge tb-blackduck">Security</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="step-name">🔍 Coverity</div><div class="step-desc">SAST</div><span class="tool-badge tb-coverity">Quality</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="step-name">📦 Harbor</div><div class="step-desc">Push Image</div><span class="tool-badge tb-harbor">Registry</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step highlight"><div class="step-name">☁️ AWS</div><div class="step-desc">Manual Deploy</div></div>
+    </div>
+  </section>
+
+  <!-- Challenges -->
+  <section class="section">
+    <div class="section-label">04 — Challenges</div>
+    <h2>Challenges & Pain Points</h2>
+    <p>ปัญหาที่พบในกระบวนการปัจจุบัน ที่ส่งผลต่อ speed, quality และ reliability</p>
+    <div class="cards-grid" style="grid-template-columns: 1fr 1fr;">
+      <div class="card" style="border-left: 3px solid var(--danger);">
+        <h3>⚠️ Manual Infrastructure</h3>
+        <p>ต้องสร้างและจัดการ infrastructure ด้วยมือ — เสียเวลา ผิดพลาดง่าย ไม่สามารถ reproduce ได้</p>
+      </div>
+      <div class="card" style="border-left: 3px solid var(--danger);">
+        <h3>⚠️ No IaC</h3>
+        <p>ไม่มี Infrastructure as Code — infrastructure configuration กระจาย ไม่มี version control</p>
+      </div>
+      <div class="card" style="border-left: 3px solid var(--danger);">
+        <h3>⚠️ Environment Inconsistency</h3>
+        <p>Dev/Staging/Prod ไม่เหมือนกัน — "works on my machine" problem</p>
+      </div>
+      <div class="card" style="border-left: 3px solid var(--danger);">
+        <h3>⚠️ Slow Deployments</h3>
+        <p>ขั้นตอน manual หลายจุด — deployment cycle ยาว ใช้เวลาหลายชั่วโมงถึงหลายวัน</p>
+      </div>
+      <div class="card" style="border-left: 3px solid var(--danger);">
+        <h3>⚠️ Limited Rollback</h3>
+        <p>ไม่มี automated rollback — เมื่อ deploy แล้วมีปัญหา ต้องแก้ไขด้วยมือ</p>
+      </div>
+      <div class="card" style="border-left: 3px solid var(--danger);">
+        <h3>⚠️ Security Bottlenecks</h3>
+        <p>security scan เป็น bottleneck — scan ช้า ต้องรอก่อน deploy ได้</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Terraform -->
+  <section class="section">
+    <div class="section-label">05 — Enhancement</div>
+    <h2>Terraform — Infrastructure as Code</h2>
+    <p>เปลี่ยนจากการ managing infrastructure ด้วยมือ เป็น declarative code ที่ version-controlled, repeatable, และ auditable</p>
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-icon icon-green">📝</div>
+        <h3>Declarative</h3>
+        <p>นิยาม infrastructure ด้วย HCL code — บอกว่าต้องการอะไร ไม่ใช่ทำยังไง</p>
+      </div>
+      <div class="card">
+        <div class="card-icon icon-green">🔄</div>
+        <h3>Repeatable</h3>
+        <p>สร้าง environment เดียวกันได้ซ้ำแล้วซ้ำอีก — Dev, Staging, Prod ตรงกัน</p>
+      </div>
+      <div class="card">
+        <div class="card-icon icon-green">📦</div>
+        <h3>Version-Controlled</h3>
+        <p>infrastructure เป็น code อยู่ใน Git — track changes, review, rollback ได้</p>
+      </div>
+      <div class="card">
+        <div class="card-icon icon-green">☁️</div>
+        <h3>Multi-Cloud Ready</h3>
+        <p>รองรับ AWS, Azure, GCP — provider-agnostic, ย้าย cloud ได้ง่าย</p>
+      </div>
+    </div>
+    <div style="margin-top: 2rem; padding: 1.5rem; background: var(--bg-secondary); border: 1px solid var(--accent-orange); border-radius: var(--radius); display: flex; align-items: center; gap: 1rem;">
+      <span style="font-size: 1.5rem;">📋</span>
+      <div>
+        <strong>Status: อยู่ระหว่างขออนุมัตินำเข้ามาใช้งานภายใน</strong>
+        <p style="margin: 4px 0 0; font-size: 0.9rem; color: var(--text-secondary);">ดำเนินการขออนุมัติ procurement และ licensing เพื่อนำ Terraform เข้ามาใช้งานใน production pipeline</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI Automation -->
+  <section class="section">
+    <div class="section-label">06 — AI Enhancement</div>
+    <h2>AI-Powered Automation Pipeline</h2>
+    <p>นำ AI มาช่วยในขั้นตอนต่างๆ ของ CI/CD pipeline เพื่อเพิ่ม speed, accuracy และ reliability</p>
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-icon icon-orange">🤖</div>
+        <h3>AI Code Review</h3>
+        <p>AI ช่วย review code, ตรวจ security pattern, แนะนำ best practices ก่อน merge</p>
+      </div>
+      <div class="card">
+        <div class="card-icon icon-orange">🧪</div>
+        <h3>Auto Test Generation</h3>
+        <p>AI สร้าง test case อัตโนมัติ จาก code analysis — เพิ่ม test coverage ได้เร็ว</p>
+      </div>
+      <div class="card">
+        <div class="card-icon icon-orange">🔮</div>
+        <h3>Predictive Failure Detection</h3>
+        <p>ทำนายปัญหาที่อาจเกิดจาก code change — แจ้งเตือนก่อน deploy</p>
+      </div>
+      <div class="card">
+        <div class="card-icon icon-orange">🔄</div>
+        <h3>Smart Rollback</h3>
+        <p>AI วิเคราะห์ impact และแนะนำ rollback strategy อัตโนมัติ</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Compare -->
+  <section id="compare" class="section">
+    <div class="section-label">07 — Comparison</div>
+    <h2>Process Comparison: Current vs Enhanced</h2>
+    <p>เปรียบเทียบเชิง process ระหว่างระบบปัจจุบัน กับระบบที่เพิ่ม Terraform + AI Automation</p>
+    <div style="overflow-x: auto;">
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th style="width: 25%;">Aspect</th>
+          <th style="width: 37%;">Current Process</th>
+          <th style="width: 38%;">Enhanced Process (+Terraform +AI)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Infrastructure</strong></td>
+          <td class="current">Manual provisioning</td>
+          <td class="improved">✅ Terraform IaC — version-controlled, repeatable</td>
+        </tr>
+        <tr>
+          <td><strong>Deployment</strong></td>
+          <td class="current">Semi-automated (Jenkins)</td>
+          <td class="improved">✅ Fully automated — CI/CD + IaC integration</td>
+        </tr>
+        <tr>
+          <td><strong>Security Scanning</strong></td>
+          <td class="current">Manual trigger, sequential</td>
+          <td class="improved">✅ Parallel scan + AI-assisted triage</td>
+        </tr>
+        <tr>
+          <td><strong>Code Review</strong></td>
+          <td class="current">Manual review only</td>
+          <td class="improved">✅ AI-assisted review + auto-suggestions</td>
+        </tr>
+        <tr>
+          <td><strong>Environment Setup</strong></td>
+          <td class="current">Days (manual)</td>
+          <td class="improved">✅ Minutes (Terraform apply)</td>
+        </tr>
+        <tr>
+          <td><strong>Consistency</strong></td>
+          <td class="current">Variable — drift between envs</td>
+          <td class="improved">✅ Guaranteed — same code = same infra</td>
+        </tr>
+        <tr>
+          <td><strong>Rollback</strong></td>
+          <td class="current">Manual intervention</td>
+          <td class="improved">✅ AI-assisted automated rollback</td>
+        </tr>
+        <tr>
+          <td><strong>Test Coverage</strong></td>
+          <td class="current">Manual test authoring</td>
+          <td class="improved">✅ AI auto-generated test cases</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <!-- Benefits -->
+  <section id="benefits" class="section">
+    <div class="section-label">08 — Benefits</div>
+    <h2>Benefits & Expected ROI</h2>
+    <p>ผลลัพธ์ที่คาดว่าจะได้รับจากการยกระดับ pipeline</p>
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-number">10x</div>
+        <div class="stat-label">Deployment Frequency</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">80%</div>
+        <div class="stat-label">Faster Lead Time</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">90%</div>
+        <div class="stat-label">Faster Recovery</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">65%</div>
+        <div class="stat-label">Less Change Failure</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Roadmap -->
+  <section class="section">
+    <div class="section-label">09 — Roadmap</div>
+    <h2>Implementation Roadmap</h2>
+    <p>แผนการดำเนินงานในการยกระดับ CI/CD pipeline อย่างเป็นขั้นตอน</p>
+    <div class="roadmap">
+      <div class="roadmap-item active">
+        <div class="roadmap-dot"></div>
+        <div class="phase">Phase 1</div>
+        <div class="phase-title">Current State</div>
+        <div class="phase-desc">GitLab + Jenkins + Harbor + BlackDuck + Coverity</div>
+        <div class="phase-time">Now — ✅ Active</div>
+      </div>
+      <div class="roadmap-item pending">
+        <div class="roadmap-dot"></div>
+        <div class="phase">Phase 2</div>
+        <div class="phase-title">Add Terraform</div>
+        <div class="phase-desc">Infrastructure as Code + Automated Provisioning</div>
+        <div class="phase-time">Q3 2026</div>
+      </div>
+      <div class="roadmap-item pending">
+        <div class="roadmap-dot"></div>
+        <div class="phase">Phase 3</div>
+        <div class="phase-title">AI Integration</div>
+        <div class="phase-desc">AI Code Review + Auto Test + Smart Deploy</div>
+        <div class="phase-time">Q4 2026</div>
+      </div>
+      <div class="roadmap-item pending">
+        <div class="roadmap-dot"></div>
+        <div class="phase">Phase 4</div>
+        <div class="phase-title">Full Optimization</div>
+        <div class="phase-desc">Complete Pipeline — Self-healing + Auto-scaling</div>
+        <div class="phase-time">Q1 2027</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- Footer -->
+<div class="site-footer">
+  <p>DevOps Engineering Team — SDLC & CI/CD Pipeline on AWS Cloud</p>
+  <p style="margin-top: 0.5rem; font-size: 0.75rem;">Click <strong>▶ Presentation Mode</strong> to view fullscreen slides</p>
+</div>
+
+
+<!-- ===== PRESENTATION MODE OVERLAY ===== -->
+<div class="presentation-overlay" id="presOverlay">
+  <div class="pres-progress" id="presProgress"></div>
+  <div class="pres-slide-container" id="slideContainer">
+
+    <!-- SLIDE 1: Title -->
+    <div class="pres-slide slide-title-bg active" data-slide="1">
+      <div>
+        <div class="s-label" style="margin-bottom: 30px;">DevOps Engineering Team</div>
+        <div class="s-title">Modernizing SDLC<br>with CI/CD Pipeline<br>on AWS Cloud</div>
+        <div class="s-subtitle" style="margin-top: 30px;">Leveraging Infrastructure as Code, Automated Security & AI-Powered Automation</div>
+        <div class="s-organization">
+          🛰️ CI/CD Pipeline Enhancement Proposal
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: Agenda -->
+    <div class="pres-slide slide-gradient" data-slide="2">
+      <div class="slide-left">
+        <div class="s-label">Agenda</div>
+        <div class="s-accent-bar"></div>
+        <div class="s-heading">What We'll Cover</div>
+        <div class="s-list">
+          <li><span class="li-icon">📋</span> Current SDLC Process & CI/CD Tool Chain</li>
+          <li><span class="li-icon">🔍</span> Security & Quality Gates (BlackDuck + Coverity)</li>
+          <li><span class="li-icon">⚠️</span> Challenges & Pain Points in Current Process</li>
+          <li><span class="li-icon">🏗️</span> Solution: Terraform — Infrastructure as Code</li>
+          <li><span class="li-icon">🤖</span> AI-Powered Automation Pipeline</li>
+          <li><span class="li-icon">⚖️</span> Process Comparison: Current vs Enhanced</li>
+          <li><span class="li-icon">📈</span> Benefits, ROI & Implementation Roadmap</li>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: Current SDLC -->
+    <div class="pres-slide slide-gradient" data-slide="3">
+      <div class="slide-left">
+        <div class="s-label">Current State</div>
+        <div class="s-accent-bar"></div>
+        <div class="s-heading">SDLC Process Flow</div>
+        <div class="s-body" style="margin-bottom: 30px;">Software Development Life Cycle ที่ใช้งานอยู่ — ครอบคลุมทุกขั้นตอน</div>
+        <div class="s-flow">
+          <div class="s-flow-step"><div class="step-icon">📋</div><div class="step-name">Plan</div><div class="step-detail">Requirements</div></div>
+          <div class="s-flow-arrow">→</div>
+          <div class="s-flow-step"><div class="step-icon">💻</div><div class="step-name">Code</div><div class="step-detail">Development</div></div>
+          <div class="s-flow-arrow">→</div>
+          <div class="s-flow-step"><div class="step-icon">🔨</div><div class="step-name">Build</div><div class="step-detail">Compile</div></div>
+          <div class="s-flow-arrow">→</div>
+          <div class="s-flow-step"><div class="step-icon">🧪</div><div class="step-name">Test</div><div class="step-detail">QA & Security</div></div>
+          <div class="s-flow-arrow">→</div>
+          <div class="s-flow-step"><div class="step-icon">🚀</div><div class="step-name">Deploy</div><div class="step-detail">AWS Cloud</div></div>
+          <div class="s-flow-arrow">→</div>
+          <div class="s-flow-step"><div class="step-icon">📊</div><div class="step-name">Monitor</div><div class="step-detail">Observability</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: Tool Chain -->
+    <div class="pres-slide slide-gradient" data-slide="4">
+      <div class="slide-left">
+        <div class="s-label">Tool Chain</div>
+        <div class="s-accent-bar"></div>
+        <div class="s-heading">Current CI/CD Tools</div>
+        <div class="s-cards s-cards-3">
+          <div class="s-card">
+            <div class="s-card-icon icon-orange">🦊</div>
+            <h4>GitLab</h4>
+            <p>Source Code Management<br>CI Pipeline Trigger<br>Merge Request & Review</p>
+          </div>
+          <div class="s-card">
+            <div class="s-card-icon icon-orange">🔧</div>
+            <h4>Jenkins</h4>
+            <p>Build Server<br>Test Automation<br>Deployment Scripts</p>
+          </div>
+          <div class="s-card">
+            <div class="s-card-icon icon-blue">📦</div>
+            <h4>Harbor</h4>
+            <p>Container Registry<br>Image Storage<br>Vulnerability Scan</p>
+          </div>
+        </div>
+        <div class="s-cards s-cards-3" style="margin-top: 20px;">
+          <div class="s-card">
+            <div class="s-card-icon icon-blue">🛡️</div>
+            <h4>BlackDuck</h4>
+            <p>Open Source Security<br>OSS Component Scan<br>License Compliance</p>
+          </div>
+          <div class="s-card">
+            <div class="s-card-icon icon-teal">🔍</div>
+            <h4>Coverity</h4>
+            <p>Static Analysis (SAST)<br>Code Quality<br>Security Flaw Detection</p>
+          </div>
+          <div class="s-card" style="border-color: var(--accent-orange); opacity: 0.7;">
+            <div class="s-card-icon icon-green">🏗️</div>
+            <h4>Terraform <span class="s-tag s-tag-orange" style="font-size: 11px;">Pending</span></h4>
+            <p>Infrastructure as Code<br>HCL Declarative<br>Multi-Cloud Support</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: Security Gates -->
+    <div class="pres-slide slide-gradient" data-slide="5">
+      <div class="slide-left">
+        <div class="s-label">Security & Quality</div>
+        <div class="s-accent-bar"></div>
+        <div class="s-heading">Security & Quality Gates</div>
+        <div class="s-two-col">
+          <div>
+            <div class="s-card" style="margin-bottom: 20px;">
+              <div class="s-card-icon icon-blue" style="font-size: 24px;">🛡️</div>
+              <h4>BlackDuck — OSS Security</h4>
+              <p style="margin-top: 8px;">
+                ✅ Scan open-source components<br>
+                ✅ Identify known vulnerabilities<br>
+                ✅ License compliance checking<br>
+                ✅ SBOM generation
+              </p>
+            </div>
+            <div style="font-size: 16px; color: var(--text-secondary); padding: 16px 0;">
+              <strong style="color: var(--text-primary);">When:</strong> After build, before deploy<br>
+              <strong style="color: var(--text-primary);">Trigger:</strong> Manual / Jenkins pipeline step
+            </div>
+          </div>
+          <div>
+            <div class="s-card" style="margin-bottom: 20px;">
+              <div class="s-card-icon icon-teal" style="font-size: 24px;">🔍</div>
+              <h4>Coverity — Static Analysis</h4>
+              <p style="margin-top: 8px;">
+                ✅ Deep source code analysis<br>
+                ✅ Security flaw detection<br>
+                ✅ Code quality metrics<br>
+                ✅ Compliance reporting
+              </p>
+            </div>
+            <div style="font-size: 16px; color: var(--text-secondary); padding: 16px 0;">
+              <strong style="color: var(--text-primary);">When:</strong> During build phase<br>
+              <strong style="color: var(--text-primary);">Trigger:</strong> Jenkins pipeline step
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: Current Pipeline Flow -->
+    <div class="pres-slide slide-gradient" data-slide="6">
+      <div class="slide-left">
+        <div class="s-label">Current Pipeline</div>
+        <div class="s-accent-bar"></div>
+        <div class="s-heading">Current CI/CD Pipeline Flow</div>
+        <div class="s-body" style="margin-bottom: 30px;">ขั้นตอนการทำงานจาก Developer commit จนถึง Deploy บน AWS</div>
+        <div class="s-flow" style="flex-wrap: nowrap;">
+          <div class="s-flow-step highlight"><div class="step-icon">👨‍💻</div><div class="step-name">Developer</div><div class="step-detail">git push</div></div>
+          <div class="s-flow-arrow">→</div>
+          <div class="s-flow-step"><div class="step-icon">🦊</div><div class="step-name">GitLab</div><div class="step-detail">CI Trigger</div></div>
+          <div class="s-flow-arrow">→</div>
+          <div class="s-flow-step"><div class="step-icon">🔧</div><div class="step-name">Jenkins</div><div class="step-detail">Build & Test</div></div>
+          <div class="s-flow-arrow">→</div>
+          <div class="s-flow-step"><div class="step-icon">🛡️</div><div class="step-name">BlackDuck</div><div class="step-detail">OSS Scan</div></div>
+          <div class="s-flow-arrow">→</div>
+          <div class="s-flow-step"><div class="step-icon">🔍</div><div class="step-name">Coverity</div><div class="step-detail">SAST</div></div>
+          <div class="s-flow-arrow">→</div>
+          <div class="s-flow-step"><div class="step-icon">📦</div><div class="step-name">Harbor</div><div class="step-detail">Push Image</div></div>
+          <div class="s-flow-arrow">→</div>
+          <div class="s-flow-step highlight"><div class="step-icon">☁️</div><div class="step-name">AWS</div><div class="step-detail">Deploy ⚠️</div></div>
+        </div>
+        <div style="margin-top: 30px; padding: 16px 24px; background: rgba(248,81,73,0.08); border: 1px solid rgba(248,81,73,0.3); border-radius: 10px; font-size: 16px; color: var(--text-secondary);">
+          ⚠️ <strong style="color: var(--danger);">Pain Point:</strong> Deploy step เป็นแบบ manual — infrastructure provisioning ต้องทำด้วยมือ, ไม่มี IaC, rollback ยุ่งยาก
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 7: Challenges -->
+    <div class="pres-slide slide-gradient" data-slide="7">
+      <div class="slide-left">
+        <div class="s-label">Pain Points</div>
+        <div class="s-accent-bar"></div>
+        <div class="s-heading">Challenges in Current Process</div>
+        <div class="s-cards s-cards-2" style="grid-template-columns: 1fr 1fr;">
+          <div class="s-card" style="border-left: 3px solid var(--danger);">
+            <h4>⚠️ Manual Infrastructure</h4>
+            <p>สร้าง/จัดการ infra ด้วยมือ — เสียเวลา ผิดพลาดง่าย</p>
+          </div>
+          <div class="s-card" style="border-left: 3px solid var(--danger);">
+            <h4>⚠️ No Infrastructure as Code</h4>
+            <p>infrastructure config กระจาย ไม่มี version control</p>
+          </div>
+          <div class="s-card" style="border-left: 3px solid var(--danger);">
+            <h4>⚠️ Environment Drift</h4>
+            <p>Dev/Staging/Prod ไม่เหมือนกัน — "works on my machine"</p>
+          </div>
+          <div class="s-card" style="border-left: 3px solid var(--danger);">
+            <h4>⚠️ Slow Deployment Cycles</h4>
+            <p>manual steps หลายจุด — cycle time ยาว หลายชั่วโมง-วัน</p>
+          </div>
+          <div class="s-card" style="border-left: 3px solid var(--danger);">
+            <h4>⚠️ No Automated Rollback</h4>
+            <p>deploy มีปัญหา ต้องแก้ไขด้วยมือ — MTTR สูง</p>
+          </div>
+          <div class="s-card" style="border-left: 3px solid var(--danger);">
+            <h4>⚠️ Security Scan Bottleneck</h4>
+            <p>scan ช้า, sequential — ต้องรอก่อน deploy ได้</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 8: Terraform -->
+    <div class="pres-slide slide-gradient" data-slide="8">
+      <div class="slide-left">
+        <div class="s-label">Solution Part 1</div>
+        <div class="s-accent-bar"></div>
+        <div class="s-heading">Terraform — Infrastructure as Code</div>
+        <div class="s-body" style="margin-bottom: 24px;">เปลี่ยนจากการ managing infrastructure ด้วยมือ เป็น declarative code</div>
+        <div class="s-cards s-cards-4">
+          <div class="s-card">
+            <div class="s-card-icon icon-green">📝</div>
+            <h4>Declarative</h4>
+            <p>นิยาม infra ด้วย HCL — บอกว่าต้องการอะไร</p>
+          </div>
+          <div class="s-card">
+            <div class="s-card-icon icon-green">🔄</div>
+            <h4>Repeatable</h4>
+            <p>สร้าง env เดียวกันได้ซ้ำแล้วซ้ำอีก</p>
+          </div>
+          <div class="s-card">
+            <div class="s-card-icon icon-green">📦</div>
+            <h4>Version-Controlled</h4>
+            <p>infra เป็น code ใน Git — track, review, rollback</p>
+          </div>
+          <div class="s-card">
+            <div class="s-card-icon icon-green">☁️</div>
+            <h4>Multi-Cloud</h4>
+            <p>รองรับ AWS, Azure, GCP — provider-agnostic</p>
+          </div>
+        </div>
+        <div style="margin-top: 24px; padding: 16px 24px; background: rgba(255,153,0,0.08); border: 1px solid rgba(255,153,0,0.3); border-radius: 10px; font-size: 16px; color: var(--text-secondary);">
+          📋 <strong style="color: var(--accent-orange);">Status:</strong> อยู่ระหว่างขออนุมัตินำเข้ามาใช้งานภายใน — procurement & licensing pending
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 9: AI Automation -->
+    <div class="pres-slide slide-gradient" data-slide="9">
+      <div class="slide-left">
+        <div class="s-label">Solution Part 2</div>
+        <div class="s-accent-bar"></div>
+        <div class="s-heading">AI-Powered Automation</div>
+        <div class="s-body" style="margin-bottom: 24px;">นำ AI มาช่วยเพิ่ม speed, accuracy และ reliability ใน pipeline</div>
+        <div class="s-cards s-cards-2" style="grid-template-columns: 1fr 1fr;">
+          <div class="s-card">
+            <div class="s-card-icon icon-orange">🤖</div>
+            <h4>AI Code Review</h4>
+            <p>Review code อัตโนมัติ, ตรวจ security pattern, แนะนำ best practices ก่อน merge — ลด time ที่ต้องรอ reviewer</p>
+          </div>
+          <div class="s-card">
+            <div class="s-card-icon icon-orange">🧪</div>
+            <h4>Auto Test Generation</h4>
+            <p>AI สร้าง test case จาก code analysis — เพิ่ม test coverage ได้เร็ว ลด manual test effort</p>
+          </div>
+          <div class="s-card">
+            <div class="s-card-icon icon-orange">🔮</div>
+            <h4>Predictive Failure Detection</h4>
+            <p>ทำนายปัญหาจาก code change — แจ้งเตือนก่อน deploy ลด change failure rate</p>
+          </div>
+          <div class="s-card">
+            <div class="s-card-icon icon-orange">🔄</div>
+            <h4>Smart Rollback & Deploy</h4>
+            <p>AI วิเคราะห์ impact, แนะนำ rollback strategy, ตัดสินใจ auto-rollback เมื่อ anomaly ตรวจพบ</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 10: Enhanced Pipeline -->
+    <div class="pres-slide slide-gradient" data-slide="10">
+      <div class="slide-left">
+        <div class="s-label">Enhanced Pipeline</div>
+        <div class="s-accent-bar"></div>
+        <div class="s-heading">Enhanced CI/CD Pipeline</div>
+        <div class="s-body" style="margin-bottom: 20px;">Pipeline ใหม่ที่รวม Terraform + AI Automation เข้าไว้ด้วยกัน</div>
+        <div class="s-flow" style="flex-wrap: nowrap; font-size: 14px;">
+          <div class="s-flow-step highlight" style="min-width: 110px; padding: 12px 14px;"><div class="step-icon">👨‍💻</div><div class="step-name" style="font-size: 14px;">Developer</div><div class="step-detail">git push</div></div>
+          <div class="s-flow-arrow" style="font-size: 22px;">→</div>
+          <div class="s-flow-step" style="min-width: 110px; padding: 12px 14px;"><div class="step-icon">🦊</div><div class="step-name" style="font-size: 14px;">GitLab</div><div class="step-detail">CI Trigger</div></div>
+          <div class="s-flow-arrow" style="font-size: 22px;">→</div>
+          <div class="s-flow-step" style="min-width: 110px; padding: 12px 14px;"><div class="step-icon">🔧</div><div class="step-name" style="font-size: 14px;">Jenkins</div><div class="step-detail">Build</div></div>
+          <div class="s-flow-arrow" style="font-size: 22px;">→</div>
+          <div class="s-flow-step new" style="min-width: 110px; padding: 12px 14px;"><div class="step-icon">🤖</div><div class="step-name" style="font-size: 14px;">AI Review</div><div class="step-detail">Code + Test</div></div>
+          <div class="s-flow-arrow" style="font-size: 22px;">→</div>
+          <div class="s-flow-step" style="min-width: 110px; padding: 12px 14px;"><div class="step-icon">🛡️</div><div class="step-name" style="font-size: 14px;">Security</div><div class="step-detail">Parallel Scan</div></div>
+          <div class="s-flow-arrow" style="font-size: 22px;">→</div>
+          <div class="s-flow-step" style="min-width: 110px; padding: 12px 14px;"><div class="step-icon">📦</div><div class="step-name" style="font-size: 14px;">Harbor</div><div class="step-detail">Push Image</div></div>
+          <div class="s-flow-arrow" style="font-size: 22px;">→</div>
+          <div class="s-flow-step new" style="min-width: 110px; padding: 12px 14px;"><div class="step-icon">🏗️</div><div class="step-name" style="font-size: 14px;">Terraform</div><div class="step-detail">Provision</div></div>
+          <div class="s-flow-arrow" style="font-size: 22px;">→</div>
+          <div class="s-flow-step highlight" style="min-width: 110px; padding: 12px 14px;"><div class="step-icon">☁️</div><div class="step-name" style="font-size: 14px;">AWS</div><div class="step-detail">Auto Deploy ✅</div></div>
+        </div>
+        <div style="margin-top: 24px; display: flex; gap: 16px;">
+          <div style="flex: 1; padding: 14px 20px; background: rgba(1,169,130,0.08); border: 1px solid rgba(1,169,130,0.3); border-radius: 8px; font-size: 14px;">
+            <span style="color: var(--accent-teal); font-weight: 600;">🆕 New Steps:</span>
+            <span style="color: var(--text-secondary);"> AI Review + Terraform Provision — orange bordered steps</span>
+          </div>
+          <div style="flex: 1; padding: 14px 20px; background: rgba(88,166,255,0.08); border: 1px solid rgba(88,166,255,0.3); border-radius: 8px; font-size: 14px;">
+            <span style="color: var(--accent-blue); font-weight: 600;">⚡ Key Change:</span>
+            <span style="color: var(--text-secondary);"> Deploy กลายเป็น fully automated แทน manual</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 11: Comparison Table -->
+    <div class="pres-slide slide-gradient" data-slide="11">
+      <div class="slide-left">
+        <div class="s-label">Comparison</div>
+        <div class="s-accent-bar"></div>
+        <div class="s-heading">Process Comparison: Current vs Enhanced</div>
+        <table class="s-table">
+          <thead>
+            <tr>
+              <th style="width: 22%;">Aspect</th>
+              <th style="width: 39%;">Current Process</th>
+              <th style="width: 39%;">Enhanced (+Terraform +AI)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Infrastructure</strong></td>
+              <td class="current">Manual provisioning</td>
+              <td class="improved">✅ Terraform IaC</td>
+            </tr>
+            <tr>
+              <td><strong>Deployment</strong></td>
+              <td class="current">Semi-automated (Jenkins)</td>
+              <td class="improved">✅ Fully automated + IaC</td>
+            </tr>
+            <tr>
+              <td><strong>Security</strong></td>
+              <td class="current">Manual trigger, sequential</td>
+              <td class="improved">✅ Parallel scan + AI triage</td>
+            </tr>
+            <tr>
+              <td><strong>Code Review</strong></td>
+              <td class="current">Manual review only</td>
+              <td class="improved">✅ AI-assisted review</td>
+            </tr>
+            <tr>
+              <td><strong>Env Setup</strong></td>
+              <td class="current">Days (manual)</td>
+              <td class="improved">✅ Minutes (terraform apply)</td>
+            </tr>
+            <tr>
+              <td><strong>Consistency</strong></td>
+              <td class="current">Variable — drift between envs</td>
+              <td class="improved">✅ Guaranteed consistency</td>
+            </tr>
+            <tr>
+              <td><strong>Rollback</strong></td>
+              <td class="current">Manual intervention</td>
+              <td class="improved">✅ AI-assisted auto rollback</td>
+            </tr>
+            <tr>
+              <td><strong>Testing</strong></td>
+              <td class="current">Manual test authoring</td>
+              <td class="improved">✅ AI auto-generated tests</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SLIDE 12: Benefits -->
+    <div class="pres-slide slide-gradient" data-slide="12">
+      <div class="slide-left">
+        <div class="s-label">Benefits & ROI</div>
+        <div class="s-accent-bar"></div>
+        <div class="s-heading">Expected Benefits & ROI</div>
+        <div class="s-stats">
+          <div class="s-stat">
+            <div class="num">10x</div>
+            <div class="label">Deployment Frequency</div>
+            <div class="delta">Weekly → Multiple per day</div>
+          </div>
+          <div class="s-stat">
+            <div class="num">80%</div>
+            <div class="label">Faster Lead Time</div>
+            <div class="delta">Days → Hours</div>
+          </div>
+          <div class="s-stat">
+            <div class="num">90%</div>
+            <div class="label">Faster Recovery (MTTR)</div>
+            <div class="delta">Hours → Minutes</div>
+          </div>
+          <div class="s-stat">
+            <div class="num">65%</div>
+            <div class="label">Less Change Failure</div>
+            <div class="delta">15% → &lt;5%</div>
+          </div>
+          <div class="s-stat">
+            <div class="num">3-5×</div>
+            <div class="label">Faster Env Provisioning</div>
+            <div class="delta">Days → Minutes</div>
+          </div>
+          <div class="s-stat">
+            <div class="num">30%</div>
+            <div class="label">Infrastructure Cost Savings</div>
+            <div class="delta">Optimized resource allocation</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 13: Roadmap -->
+    <div class="pres-slide slide-gradient" data-slide="13">
+      <div class="slide-left">
+        <div class="s-label">Roadmap</div>
+        <div class="s-accent-bar"></div>
+        <div class="s-heading">Implementation Roadmap</div>
+        <div class="s-body" style="margin-bottom: 20px;">แผนการยกระดับ pipeline อย่างเป็นขั้นตอน — 4 phases</div>
+        <div class="s-roadmap">
+          <div class="s-roadmap-item done">
+            <div class="s-rm-dot"></div>
+            <div class="s-rm-phase">Phase 1</div>
+            <div class="s-rm-title">Current State</div>
+            <div class="s-rm-desc">GitLab + Jenkins + Harbor<br>+ BlackDuck + Coverity</div>
+            <div class="s-rm-time">Now ✅ Active</div>
+          </div>
+          <div class="s-roadmap-item pending">
+            <div class="s-rm-dot"></div>
+            <div class="s-rm-phase">Phase 2</div>
+            <div class="s-rm-title">Add Terraform</div>
+            <div class="s-rm-desc">Infrastructure as Code<br>+ Automated Provisioning</div>
+            <div class="s-rm-time">Q3 2026</div>
+          </div>
+          <div class="s-roadmap-item pending">
+            <div class="s-rm-dot"></div>
+            <div class="s-rm-phase">Phase 3</div>
+            <div class="s-rm-title">AI Integration</div>
+            <div class="s-rm-desc">AI Code Review + Auto Test<br>+ Smart Deploy</div>
+            <div class="s-rm-time">Q4 2026</div>
+          </div>
+          <div class="s-roadmap-item pending">
+            <div class="s-rm-dot"></div>
+            <div class="s-rm-phase">Phase 4</div>
+            <div class="s-rm-title">Full Optimization</div>
+            <div class="s-rm-desc">Self-healing Pipeline<br>+ Auto-scaling + Monitoring</div>
+            <div class="s-rm-time">Q1 2027</div>
+          </div>
+        </div>
+        <div style="margin-top: 50px; padding: 20px 28px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 10px;">
+          <div style="display: flex; gap: 40px; font-size: 16px; color: var(--text-secondary);">
+            <div><strong style="color: var(--accent-teal);">Phase 1 → 2:</strong> Terraform adoption + team training</div>
+            <div><strong style="color: var(--accent-orange);">Phase 2 → 3:</strong> AI tool evaluation + PoC + integration</div>
+            <div><strong style="color: var(--accent-blue);">Phase 3 → 4:</strong> Full optimization + self-healing</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 14: Thank You -->
+    <div class="pres-slide slide-end" data-slide="14">
+      <div>
+        <div style="font-size: 64px; margin-bottom: 30px;">🚀</div>
+        <div class="s-title" style="font-size: 52px;">Thank You</div>
+        <div class="s-subtitle" style="margin-top: 20px;">Questions & Discussion</div>
+        <div style="margin-top: 40px; display: flex; gap: 16px; justify-content: center;">
+          <span class="s-tag s-tag-teal">GitLab</span>
+          <span class="s-tag s-tag-teal">Jenkins</span>
+          <span class="s-tag s-tag-teal">Harbor</span>
+          <span class="s-tag s-tag-teal">BlackDuck</span>
+          <span class="s-tag s-tag-teal">Coverity</span>
+          <span class="s-tag s-tag-orange">Terraform</span>
+          <span class="s-tag s-tag-orange">AI Automation</span>
+        </div>
+        <div style="margin-top: 40px; font-size: 16px; color: var(--text-secondary);">
+          DevOps Engineering Team — CI/CD Pipeline on AWS Cloud
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Controls Bar -->
+  <div class="pres-controls">
+    <button class="pres-btn" onclick="prevSlide()">← Previous</button>
+    <span class="pres-counter" id="slideCounter">1 / 14</span>
+    <button class="pres-btn" onclick="nextSlide()">Next →</button>
+    <button class="pres-btn exit" onclick="exitPresentation()">✕ Exit (Esc)</button>
+  </div>
+</div>
+
+<!-- ===== EDIT MODE HTML ===== -->
+<div class="edit-toolbar" id="editToolbar">
+  <span class="edit-badge">✏️ EDIT MODE</span>
+  <button class="edit-btn primary" onclick="openAddSlideModal()">＋ Add Slide</button>
+  <button class="edit-btn" onclick="savePresentation()">💾 Save</button>
+  <button class="edit-btn export" onclick="exportPresentation()">📦 Export HTML</button>
+  <span class="spacer"></span>
+  <span style="color: var(--text-secondary); font-size: 12px;">คลิกข้อความบน slide เพื่อแก้ไข</span>
+  <button class="edit-btn danger" onclick="toggleEditMode()">✕ Exit Edit</button>
+</div>
+
+<div class="modal-overlay" id="addSlideModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeAddSlideModal()">✕</button>
+    <h2>📄 เพิ่ม Slide ใหม่</h2>
+    <div class="template-grid">
+      <div class="template-card" onclick="selectTemplate('title')">
+        <div class="tc-icon">🎯</div>
+        <h4>Title Slide</h4>
+        <p>Slide หน้าแรก พร้อม heading ขนาดใหญ่</p>
+      </div>
+      <div class="template-card" onclick="selectTemplate('content')">
+        <div class="tc-icon">📝</div>
+        <h4>Content Slide</h4>
+        <p>Heading + bullet points</p>
+      </div>
+      <div class="template-card" onclick="selectTemplate('cards')">
+        <div class="tc-icon">🃏</div>
+        <h4>Cards Slide</h4>
+        <p>Heading + 2-4 card boxes</p>
+      </div>
+      <div class="template-card" onclick="selectTemplate('compare')">
+        <div class="tc-icon">⚖️</div>
+        <h4>Comparison Slide</h4>
+        <p>Two-column comparison</p>
+      </div>
+    </div>
+    <div class="template-form" id="templateForm">
+      <div id="formFields"></div>
+      <div style="margin-top: 16px; display: flex; gap: 10px;">
+        <button class="edit-btn primary" onclick="addNewSlide()">✅ เพิ่ม Slide</button>
+        <button class="edit-btn" onclick="closeAddSlideModal()">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-msg" id="toastMsg"></div>
+
+<script>
+  // ===== PRESENTATION MODE =====
+  let currentSlide = 1;
+  let totalSlides = document.querySelectorAll('.pres-slide').length;
+
+  function enterPresentation() {
+    const overlay = document.getElementById('presOverlay');
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    currentSlide = 1;
+    updateSlide();
+    // Try fullscreen
+    if (overlay.requestFullscreen) {
+      overlay.requestFullscreen().catch(() => {});
+    }
+  }
+
+  function exitPresentation() {
+    const overlay = document.getElementById('presOverlay');
+    overlay.classList.remove('active');
+    document.body.style.overflow = '';
+    // Exit fullscreen if active, but don't let it block
+    try {
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      }
+    } catch(e) { /* ignore fullscreen errors */ }
+  }
+
+  function nextSlide() {
+    if (currentSlide < totalSlides) {
+      currentSlide++;
+      updateSlide();
+    }
+  }
+
+  function prevSlide() {
+    if (currentSlide > 1) {
+      currentSlide--;
+      updateSlide();
+    }
+  }
+
+  function updateSlide() {
+    const slides = document.querySelectorAll('.pres-slide');
+    slides.forEach((s, i) => {
+      s.classList.toggle('active', i + 1 === currentSlide);
+    });
+    document.getElementById('slideCounter').textContent = currentSlide + ' / ' + totalSlides;
+    // Progress bar
+    const pct = (currentSlide / totalSlides) * 100;
+    document.getElementById('presProgress').style.width = pct + '%';
+  }
+
+  // Keyboard navigation
+  document.addEventListener('keydown', (e) => {
+    if (!document.getElementById('presOverlay').classList.contains('active')) return;
+    switch (e.key) {
+      case 'ArrowRight':
+      case 'ArrowDown':
+      case ' ':
+        e.preventDefault();
+        nextSlide();
+        break;
+      case 'ArrowLeft':
+      case 'ArrowUp':
+        e.preventDefault();
+        prevSlide();
+        break;
+      case 'Escape':
+        exitPresentation();
+        break;
+      case 'Home':
+        e.preventDefault();
+        currentSlide = 1;
+        updateSlide();
+        break;
+      case 'End':
+        e.preventDefault();
+        currentSlide = totalSlides;
+        updateSlide();
+        break;
+    }
+  });
+
+  // Touch support for mobile
+  let touchStartX = 0;
+  let touchStartY = 0;
+  document.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    if (!document.getElementById('presOverlay').classList.contains('active')) return;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+      if (dx < 0) nextSlide();
+      else prevSlide();
+    }
+  }, { passive: true });
+
+  // Scale presentation slides to fit viewport
+  function scaleSlides() {
+    const slides = document.querySelectorAll('.pres-slide');
+    const container = document.getElementById('slideContainer');
+    if (!container) return;
+    const containerW = container.clientWidth;
+    const containerH = container.clientHeight;
+    if (containerW === 0 || containerH === 0) return;
+    const scale = Math.min(containerW / 1920, containerH / 1080);
+    const offsetX = (containerW - 1920 * scale) / 2;
+    const offsetY = (containerH - 1080 * scale) / 2;
+    slides.forEach(s => {
+      s.style.width = '1920px';
+      s.style.height = '1080px';
+      s.style.transformOrigin = 'top left';
+      s.style.transform = `scale(${scale})`;
+      s.style.left = offsetX + 'px';
+      s.style.top = offsetY + 'px';
+    });
+  }
+
+  window.addEventListener('resize', scaleSlides);
+  // Initial scale on presentation open
+  const presObserver = new MutationObserver(() => {
+    if (document.getElementById('presOverlay').classList.contains('active')) {
+      setTimeout(scaleSlides, 50);
+    }
+  });
+  presObserver.observe(document.getElementById('presOverlay'), { attributes: true, attributeFilter: ['class'] });
+
+  // ===== EDIT MODE =====
+  let editMode = false;
+  let selectedTemplate = null;
+
+  function toggleEditMode() {
+    editMode = !editMode;
+    const body = document.body;
+    const editBtn = document.getElementById('editModeBtn');
+    if (editMode) {
+      // Enter presentation mode first if not already
+      if (!document.getElementById('presOverlay').classList.contains('active')) {
+        enterPresentation();
+      }
+      body.classList.add('edit-active');
+      editBtn.style.display = 'none';
+      enableEditing();
+      showToast('Edit Mode เปิดแล้ว — คลิกข้อความเพื่อแก้ไข');
+    } else {
+      body.classList.remove('edit-active');
+      editBtn.style.display = 'flex';
+      disableEditing();
+      closeAddSlideModal();
+    }
+  }
+
+  function enableEditing() {
+    const slides = document.querySelectorAll('.pres-slide');
+    slides.forEach((slide, idx) => {
+      // Add manage bar
+      let bar = slide.querySelector('.slide-manage-bar');
+      if (!bar) {
+        bar = document.createElement('div');
+        bar.className = 'slide-manage-bar';
+        bar.innerHTML = `
+          <button class="slide-mgmt-btn" onclick="moveSlide(${idx}, -1)" title="Move Up">▲</button>
+          <button class="slide-mgmt-btn" onclick="moveSlide(${idx}, 1)" title="Move Down">▼</button>
+          <button class="slide-mgmt-btn del" onclick="deleteSlide(${idx})" title="Delete">🗑️</button>
+          <span style="background:rgba(0,0,0,0.6);color:#aaa;padding:2px 8px;border-radius:4px;font-size:10px;">#${idx+1}</span>
+        `;
+        slide.style.position = 'absolute';
+        slide.appendChild(bar);
+      }
+      // Make text elements editable
+      const editables = slide.querySelectorAll('.s-label, .s-title, .s-heading, .s-subtitle, .s-body, .s-card h4, .s-card p, .s-flow-step .step-name, .s-flow-step .step-detail, .s-stat .label, .s-stat .delta, .s-compare-item, .s-list li, .s-benefit h4, .s-benefit p, .s-rm-phase, .s-rm-title, .s-rm-desc, .s-rm-time, .s-tag, .s-organization, .s-table td, h3, p, h4');
+      editables.forEach(el => {
+        el.setAttribute('contenteditable', 'true');
+        el.setAttribute('data-editable', 'true');
+      });
+    });
+    scaleSlides();
+  }
+
+  function disableEditing() {
+    document.querySelectorAll('[contenteditable="true"]').forEach(el => {
+      el.removeAttribute('contenteditable');
+      el.removeAttribute('data-editable');
+    });
+    document.querySelectorAll('.slide-manage-bar').forEach(bar => bar.remove());
+  }
+
+  function deleteSlide(idx) {
+    if (!confirm('ลบ slide ที่ #' + (idx+1) + ' ?')) return;
+    const slides = document.querySelectorAll('.pres-slide');
+    if (slides[idx]) {
+      slides[idx].remove();
+      totalSlides = document.querySelectorAll('.pres-slide').length;
+      if (currentSlide > totalSlides) currentSlide = totalSlides;
+      updateSlide();
+      refreshManageBars();
+      showToast('ลบ slide #' + (idx+1) + ' เรียบร้อย');
+    }
+  }
+
+  function moveSlide(idx, dir) {
+    const container = document.getElementById('slideContainer');
+    const slides = Array.from(container.querySelectorAll('.pres-slide'));
+    const newIdx = idx + dir;
+    if (newIdx < 0 || newIdx >= slides.length) return;
+    if (dir === -1) {
+      container.insertBefore(slides[idx], slides[newIdx]);
+    } else {
+      container.insertBefore(slides[newIdx], slides[idx]);
+    }
+    refreshManageBars();
+    updateSlide();
+    showToast('ย้าย slide เรียบร้อย');
+  }
+
+  function refreshManageBars() {
+    const slides = document.querySelectorAll('.pres-slide');
+    slides.forEach((slide, idx) => {
+      const bar = slide.querySelector('.slide-manage-bar');
+      if (bar) {
+        bar.innerHTML = `
+          <button class="slide-mgmt-btn" onclick="moveSlide(${idx}, -1)" title="Move Up">▲</button>
+          <button class="slide-mgmt-btn" onclick="moveSlide(${idx}, 1)" title="Move Down">▼</button>
+          <button class="slide-mgmt-btn del" onclick="deleteSlide(${idx})" title="Delete">🗑️</button>
+          <span style="background:rgba(0,0,0,0.6);color:#aaa;padding:2px 8px;border-radius:4px;font-size:10px;">#${idx+1}</span>
+        `;
+      }
+    });
+    totalSlides = slides.length;
+  }
+
+  // Add Slide Modal
+  function openAddSlideModal() {
+    document.getElementById('addSlideModal').classList.add('active');
+    document.getElementById('templateForm').classList.remove('active');
+    selectedTemplate = null;
+  }
+
+  function closeAddSlideModal() {
+    document.getElementById('addSlideModal').classList.remove('active');
+    selectedTemplate = null;
+  }
+
+  function selectTemplate(type) {
+    selectedTemplate = type;
+    const form = document.getElementById('templateForm');
+    const fields = document.getElementById('formFields');
+    form.classList.add('active');
+
+    if (type === 'title') {
+      fields.innerHTML = `
+        <div class="form-group"><label>Section Label</label><input id="tpl_label" value="New Section"></div>
+        <div class="form-group"><label>Title</label><input id="tpl_title" value="Slide Title Here"></div>
+        <div class="form-group"><label>Subtitle</label><input id="tpl_subtitle" value="Description text"></div>
+      `;
+    } else if (type === 'content') {
+      fields.innerHTML = `
+        <div class="form-group"><label>Section Label</label><input id="tpl_label" value="Section"></div>
+        <div class="form-group"><label>Heading</label><input id="tpl_heading" value="Content Heading"></div>
+        <div class="form-group"><label>Content (bullet points, แยกด้วย newline)</label><textarea id="tpl_content" rows="5">Point 1\nPoint 2\nPoint 3</textarea></div>
+      `;
+    } else if (type === 'cards') {
+      fields.innerHTML = `
+        <div class="form-group"><label>Section Label</label><input id="tpl_label" value="Section"></div>
+        <div class="form-group"><label>Heading</label><input id="tpl_heading" value="Cards Heading"></div>
+        <div class="form-group"><label>Card 1 Title</label><input id="tpl_c1t" value="Card 1"></div>
+        <div class="form-group"><label>Card 1 Description</label><input id="tpl_c1d" value="Description 1"></div>
+        <div class="form-group"><label>Card 2 Title</label><input id="tpl_c2t" value="Card 2"></div>
+        <div class="form-group"><label>Card 2 Description</label><input id="tpl_c2d" value="Description 2"></div>
+      `;
+    } else if (type === 'compare') {
+      fields.innerHTML = `
+        <div class="form-group"><label>Section Label</label><input id="tpl_label" value="Comparison"></div>
+        <div class="form-group"><label>Heading</label><input id="tpl_heading" value="Compare Title"></div>
+        <div class="form-group"><label>Left Column Title</label><input id="tpl_left" value="Option A"></div>
+        <div class="form-group"><label>Left Items (แยกด้วย newline)</label><textarea id="tpl_leftitems" rows="3">Item 1\nItem 2\nItem 3</textarea></div>
+        <div class="form-group"><label>Right Column Title</label><input id="tpl_right" value="Option B"></div>
+        <div class="form-group"><label>Right Items (แยกด้วย newline)</label><textarea id="tpl_rightitems" rows="3">Item 1\nItem 2\nItem 3</textarea></div>
+      `;
+    }
+  }
+
+  function addNewSlide() {
+    if (!selectedTemplate) return;
+    const container = document.getElementById('slideContainer');
+    const slide = document.createElement('div');
+    slide.className = 'pres-slide slide-gradient';
+    slide.dataset.slide = 'new';
+
+    if (selectedTemplate === 'title') {
+      slide.classList.add('slide-title-bg');
+      const label = document.getElementById('tpl_label').value;
+      const title = document.getElementById('tpl_title').value;
+      const subtitle = document.getElementById('tpl_subtitle').value;
+      slide.innerHTML = `<div>
+        <div class="s-label" style="margin-bottom:30px;">${label}</div>
+        <div class="s-title">${title}</div>
+        <div class="s-subtitle" style="margin-top:30px;">${subtitle}</div>
+      </div>`;
+    } else if (selectedTemplate === 'content') {
+      const label = document.getElementById('tpl_label').value;
+      const heading = document.getElementById('tpl_heading').value;
+      const lines = document.getElementById('tpl_content').value.split('\n').filter(l => l.trim());
+      const items = lines.map(l => `<li><span class="li-icon">•</span> ${l}</li>`).join('');
+      slide.innerHTML = `<div class="slide-left">
+        <div class="s-label">${label}</div>
+        <div class="s-accent-bar"></div>
+        <div class="s-heading">${heading}</div>
+        <ul class="s-list">${items}</ul>
+      </div>`;
+    } else if (selectedTemplate === 'cards') {
+      const label = document.getElementById('tpl_label').value;
+      const heading = document.getElementById('tpl_heading').value;
+      const c1t = document.getElementById('tpl_c1t').value;
+      const c1d = document.getElementById('tpl_c1d').value;
+      const c2t = document.getElementById('tpl_c2t').value;
+      const c2d = document.getElementById('tpl_c2d').value;
+      slide.innerHTML = `<div class="slide-left">
+        <div class="s-label">${label}</div>
+        <div class="s-accent-bar"></div>
+        <div class="s-heading">${heading}</div>
+        <div class="s-cards s-cards-2">
+          <div class="s-card"><h4>${c1t}</h4><p>${c1d}</p></div>
+          <div class="s-card"><h4>${c2t}</h4><p>${c2d}</p></div>
+        </div>
+      </div>`;
+    } else if (selectedTemplate === 'compare') {
+      const label = document.getElementById('tpl_label').value;
+      const heading = document.getElementById('tpl_heading').value;
+      const leftTitle = document.getElementById('tpl_left').value;
+      const leftItems = document.getElementById('tpl_leftitems').value.split('\n').filter(l => l.trim());
+      const rightTitle = document.getElementById('tpl_right').value;
+      const rightItems = document.getElementById('tpl_rightitems').value.split('\n').filter(l => l.trim());
+      const leftHTML = leftItems.map(l => `<div class="s-compare-item"><span class="ci">•</span> ${l}</div>`).join('');
+      const rightHTML = rightItems.map(l => `<div class="s-compare-item"><span class="ci">•</span> ${l}</div>`).join('');
+      slide.innerHTML = `<div class="slide-left">
+        <div class="s-label">${label}</div>
+        <div class="s-accent-bar"></div>
+        <div class="s-heading">${heading}</div>
+        <div class="s-compare">
+          <div class="s-compare-col old"><h3>${leftTitle}</h3>${leftHTML}</div>
+          <div class="s-compare-divider">VS</div>
+          <div class="s-compare-col new"><h3>${rightTitle}</h3>${rightHTML}</div>
+        </div>
+      </div>`;
+    }
+
+    // Insert after current slide
+    const slides = Array.from(container.querySelectorAll('.pres-slide'));
+    if (currentSlide < slides.length) {
+      container.insertBefore(slide, slides[currentSlide]);
+    } else {
+      container.appendChild(slide);
+    }
+
+    totalSlides = document.querySelectorAll('.pres-slide').length;
+    currentSlide++;
+    updateSlide();
+    refreshManageBars();
+    closeAddSlideModal();
+    showToast('เพิ่ม slide ใหม่เรียบร้อย!');
+  }
+
+  // Save/Load from localStorage
+  function savePresentation() {
+    const container = document.getElementById('slideContainer');
+    const html = container.innerHTML;
+    localStorage.setItem('sdlc_presentation_slides', html);
+    showToast('💾 บันทึกเรียบร้อย!');
+  }
+
+  function loadPresentation() {
+    const saved = localStorage.getItem('sdlc_presentation_slides');
+    if (saved) {
+      const container = document.getElementById('slideContainer');
+      container.innerHTML = saved;
+      totalSlides = document.querySelectorAll('.pres-slide').length;
+      updateSlide();
+    }
+  }
+
+  // Export as HTML
+  function exportPresentation() {
+    // Get current document HTML
+    const html = document.documentElement.outerHTML;
+    const blob = new Blob(['<!DOCTYPE html>\n' + html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'sdlc-presentation.html';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('📦 ดาวน์โหลดไฟล์ HTML เรียบร้อย!');
+  }
+
+  // Toast notification
+  function showToast(msg) {
+    const toast = document.getElementById('toastMsg');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2500);
+  }
+
+  // Load saved presentation on startup
+  // (Uncomment below to auto-load saved changes)
+  // loadPresentation();
+</script>
+
+</body>
+</html>
